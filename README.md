@@ -1,5 +1,5 @@
 # Spotify Genre Sorter Lite
-A lightweight and optimized solution for [@YodaBotOS/spotify-genre-sorter](https://github.com/YodaBotOS/spotify-genre-sorter)
+A lightweight and optimized solution for [@YodaBotOS/spotify-genre-sorter](https://github.com/YodaBotOS/spotify-genre-sorter) using the [Yoda API](https://api.yodabot.xyz)
 
 This repo uses Python with the Spotify API and OAuth2 to generate a playlist of songs based on the genre and creates a new playlist for that specific genre.
 
