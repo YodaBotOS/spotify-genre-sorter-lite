@@ -48,15 +48,11 @@ GENRES_IGNORED = [
     # Feel free to uncomment the genres listed above to ignore them.
 ]
 
-GENRE_PLAYLIST_NAME = {
-    # This represents a dict of `genre: name`.
-    # This will be used to set a specific playlist name for each genre playlist.
-}
 # This is the playlist name for fallbacks of GENRE_PLAYLIST_NAME if the genre isn't present there.
 # The "{}" is to be replaced with the actual genre name, in this case it will be something like "Pop Genre Playlist".
 # The "{}" just calls `.format(genre)` on the string. It is optional to have it present on the string.
-# Any `.format` syntax is applicable here e.g {0}, {!s}, etc.
-GENRE_DEFAULT_PLAYLIST_NAME = '{} Genre Playlist'
+# Note: ONLY USE THE "{}" FORMATTING STRING, DO NOT USE ANY OTHER FORMATTING STRING e.g "{0}", "{!s}", etc.
+GENRE_PLAYLIST_NAME = '{} Genre Playlist'
 
 # HINT: Description supports `None` or an empty string as a value to represent no description to the playlist.
 GENRE_PLAYLIST_DESCRIPTION = {

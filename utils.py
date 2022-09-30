@@ -1,3 +1,4 @@
+import re
 import asyncio
 
 import aiohttp
@@ -40,18 +41,17 @@ async def get_available(client: spotify.Client) -> tuple[dict[str, dict], dict[s
 
         offset += response.limit
 
-    _available_playlists = [x for x in playlists if x['owner']['id'] == user.id and x['name'] in [
-        config.GENRE_PLAYLIST_NAME.get(genre, config.GENRE_DEFAULT_PLAYLIST_NAME.format(genre.title())) for genre in
-        ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
-    ]]
+    _available_playlists = [x for x in playlists if x['owner']['id'] == user.id]
 
     available_playlists = {}
 
+    raw_name = config.GENRE_PLAYLIST_NAME.replace('{}', '')
+    regex = re.compile(rf'(.+){raw_name}')
+
     for i in _available_playlists:
-        for genre in ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']:
-            if config.GENRE_PLAYLIST_NAME.get(genre,
-                                              config.GENRE_DEFAULT_PLAYLIST_NAME.format(genre.title())) == i['name']:
-                available_playlists[genre] = i
+        if match := regex.match(i['name']):
+            genre = match.group(1).strip().lower()
+            available_playlists[genre] = i
 
     for genre, playlist in available_playlists.items():
         offset = 0
@@ -150,13 +150,15 @@ async def handle_with_semaphore(sem, client, track, genre_tracks):
 
             if playlist_created is False:
                 description = config.GENRE_DEFAULT_PLAYLIST_DESCRIPTION or ''
+
                 playlist = await client.create_playlist(
-                    config.GENRE_PLAYLIST_NAME.get(genre, config.GENRE_DEFAULT_PLAYLIST_NAME.format(genre.title())),
+                    config.GENRE_PLAYLIST_NAME.format(genre.title()),
                     description=config.GENRE_PLAYLIST_DESCRIPTION.get(
                         genre, description.format(genre.title())
                     ) or None,
                     public=config.GENRE_PLAYLIST_PUBLIC.get(genre, config.GENRE_DEFAULT_PLAYLIST_PUBLIC),
                 )
+
                 playlist_id = playlist.id
 
             await client.add_playlist_tracks(playlist_id, tracks_to_add)
