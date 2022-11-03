@@ -73,3 +73,8 @@ GENRE_DEFAULT_PLAYLIST_PUBLIC = True
 
 # Configurations
 MODE = "best"  # fast, best
+
+SEMAPHORES = [
+    10,
+    1,
+]

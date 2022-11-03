@@ -45,8 +45,8 @@ async def get_available(client: spotify.Client) -> tuple[dict[str, dict], dict[s
 
     available_playlists = {}
 
-    raw_name = config.GENRE_PLAYLIST_NAME.replace('{}', '')
-    regex = re.compile(rf'(.+){raw_name}')
+    raw_name = config.GENRE_PLAYLIST_NAME.replace('{}', r'(.+)')
+    regex = re.compile(raw_name)
 
     for i in _available_playlists:
         if match := regex.match(i['name']):
@@ -102,13 +102,14 @@ def handle_removed_tracks(tracks: list[spotify.Track], tracks_before: list[spoti
     return removed_tracks
 
 
-async def handle_with_semaphore(sem, client, track, genre_tracks):
-    try:
-        genres = await run_genre_classification(track)
-    except Exception as e:
-        raise e
+async def handle_with_semaphore(sem1, sem2, client, track, genre_tracks):
+    async with sem1:
+        try:
+            genres = await run_genre_classification(track)
+        except Exception as e:
+            raise e
 
-    async with sem:
+    async with sem2:
         for genre, confidence in genres.items():
             if not genre or not confidence or genre.lower() in [x.lower() for x in config.GENRES_IGNORED]:
                 continue
@@ -123,11 +124,13 @@ async def handle_with_semaphore(sem, client, track, genre_tracks):
 
             available_playlists, tracks_available = await get_available(client)
 
-            if genre not in available_playlists:
+            genre_modif = genre.strip().lower()
+
+            if genre_modif not in available_playlists:
                 playlist_created = False
             else:
                 playlist_created = True
-                playlist_id = available_playlists[genre]['id']
+                playlist_id = available_playlists[genre_modif]['id']
 
             offset = 0
             tracks = []
@@ -171,7 +174,8 @@ async def handle_with_semaphore(sem, client, track, genre_tracks):
 async def check_new_tracks(client: spotify.Client, *, tracks_before: list[spotify.Track] = None):
     tracks_before = tracks_before or []
 
-    sem = asyncio.Semaphore(1)
+    sem1 = asyncio.Semaphore(config.SEMAPHORES[0])
+    sem2 = asyncio.Semaphore(config.SEMAPHORES[1])
 
     while True:
         offset = 0
@@ -219,7 +223,7 @@ async def check_new_tracks(client: spotify.Client, *, tracks_before: list[spotif
             if not track.preview_url or not isinstance(track.preview_url, str):
                 continue
 
-            asyncio.create_task(handle_with_semaphore(sem, client, track, genre_tracks))
+            asyncio.create_task(handle_with_semaphore(sem1, sem2, client, track, genre_tracks))
 
         tracks_before = original_tracks
 
