@@ -19,8 +19,10 @@ class BaseDataClass:
     def __hash__(self):
         return hash(json.dumps(self.raw))
 
+
 class Track(BaseDataClass):
     """A specific spotify track"""
+
     def __eq__(self, other):
         try:
             return isinstance(other, Track) and self.raw['id'] == other.raw['id']
@@ -71,10 +73,17 @@ class PlaylistItems(BaseDataClass):
         self.items = []
 
         for item in js["items"]:
-            for k, v in item.items():
-                if k == 'track':
-                    item[k] = Track(v)
-                else:
-                    item[k] = v
+            flag = True
 
-            self.items.append(item)
+            for k, v in item.items():
+                try:
+                    if k == 'track':
+                        item[k] = Track(v)
+                    else:
+                        item[k] = v
+                except:
+                    flag = False
+                    break
+
+            if flag:
+                self.items.append(item)
