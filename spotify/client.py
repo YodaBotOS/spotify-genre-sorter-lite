@@ -259,9 +259,11 @@ class Client:
 
             for u in uris:
                 if isinstance(u, Track):
-                    uri.append(u.uri)
+                    if u.uri != None:
+                        uri.append(u.uri)
                 else:
-                    uri.append(u)
+                    if u != None:
+                        uri.append(u)
 
             params = {
                 'uris': ','.join(uri),
